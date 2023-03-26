@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -6,30 +7,26 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+
 import styles from "./popularjobs.style";
 import { COLORS, SIZES } from "../../../constants";
 import PopularJobCard from "../../common/cards/popular/PopularJobCard";
-import { useDispatch, useSelector } from "react-redux";
-import { getJobsDispatch } from "../../../app/redux/jobsReducer/jobsThunk";
+import useFetch from "../../../hook/useFetch";
+
 const Popularjobs = () => {
-  const dispatch = useDispatch();
-  const { jobs, isLoading, error } = useSelector((state) => state.jobsData);
-  useEffect(() => {
-    dispatch(
-      getJobsDispatch({
-        endPoint: "search",
-        query: {
-          query: "React developer",
-          num_pages: 1,
-        },
-      })
-    );
-  }, []);
   const router = useRouter();
+  const { data, isLoading, error } = useFetch("search", {
+    query: "React developer",
+    num_pages: "1",
+  });
+
   const [selectedJob, setSelectedJob] = useState();
-  const handlePress = (item) => {};
-  console.log({ jobs, error, isLoading });
+
+  const handleCardPress = (item) => {
+    router.push(`/job-details/${item.job_id}`);
+    setSelectedJob(item.job_id);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -38,22 +35,23 @@ const Popularjobs = () => {
           <Text style={styles.headerBtn}>Show all</Text>
         </TouchableOpacity>
       </View>
+
       <View style={styles.cardsContainer}>
         {isLoading ? (
-          <ActivityIndicator size={"large"} color={COLORS.primary} />
+          <ActivityIndicator size='large' color={COLORS.primary} />
         ) : error ? (
-          <Text> Somting Went Wrong</Text>
+          <Text>Something went wrong</Text>
         ) : (
           <FlatList
-            data={jobs}
+            data={data}
             renderItem={({ item }) => (
               <PopularJobCard
-                selectedJob={selectedJob}
-                handleCardPress={handlePress}
                 item={item}
+                selectedJob={selectedJob}
+                handleCardPress={handleCardPress}
               />
             )}
-            keyExtractor={(item) => item?.job_id}
+            keyExtractor={(item) => item.job_id}
             contentContainerStyle={{ columnGap: SIZES.medium }}
             horizontal
           />
